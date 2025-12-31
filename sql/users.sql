@@ -412,3 +412,183 @@ $$
         RAISE NOTICE '============================================';
     END
 $$;
+
+-- ============================================
+-- 表注释
+-- ============================================
+
+-- 用户表注释
+COMMENT ON TABLE users IS '存储用户基本信息的核心表，包含身份验证和基础资料';
+
+-- 用户社交链接表注释
+COMMENT ON TABLE user_social_links IS '存储用户在各个社交平台的链接信息';
+
+-- 用户设置表注释
+COMMENT ON TABLE user_settings IS '存储用户的个性化设置和偏好配置';
+
+-- 用户安全令牌表注释
+COMMENT ON TABLE user_security_tokens IS '存储密码重置、邮箱验证等安全相关的令牌';
+
+-- 用户统计表注释
+COMMENT ON TABLE user_statistics IS '存储用户的活跃度统计和内容计数数据';
+
+-- 用户关注关系表注释
+COMMENT ON TABLE user_follows IS '存储用户之间的关注关系（粉丝系统）';
+
+-- ============================================
+-- 视图注释
+-- ============================================
+
+COMMENT ON VIEW v_user_profiles IS '用户完整资料视图，整合用户主表、设置和统计信息';
+COMMENT ON VIEW v_user_social_links IS '用户社交链接视图，包含用户基本信息';
+COMMENT ON VIEW v_active_users IS '活跃用户视图，用于展示高活跃度用户';
+
+-- ============================================
+-- 函数注释
+-- ============================================
+
+COMMENT ON FUNCTION update_updated_at_column() IS '自动更新updated_at字段的触发器函数';
+COMMENT ON FUNCTION create_user_with_defaults(VARCHAR, VARCHAR, VARCHAR) IS '创建用户并初始化相关记录的封装函数';
+COMMENT ON FUNCTION update_last_login(INTEGER) IS '更新用户最后登录时间的函数';
+COMMENT ON FUNCTION update_user_stats(INTEGER, INTEGER, INTEGER, INTEGER, INTEGER, INTEGER) IS '更新用户统计数据的函数';
+
+-- ============================================
+-- 用户表列注释
+-- ============================================
+
+-- 主键和身份信息
+COMMENT ON COLUMN users.id IS '用户唯一标识符，自增主键';
+COMMENT ON COLUMN users.username IS '用户名，用于登录和显示，唯一且不可重复';
+COMMENT ON COLUMN users.email IS '用户邮箱地址，用于登录和通知，唯一且不可重复';
+COMMENT ON COLUMN users.password_hash IS '密码的哈希值，存储加密后的密码';
+COMMENT ON COLUMN users.email_verified IS '邮箱是否已验证，未验证邮箱用户功能受限';
+
+-- 用户资料
+COMMENT ON COLUMN users.display_name IS '用户显示名称，可自由设置，不同于用户名';
+COMMENT ON COLUMN users.bio IS '用户个人简介，支持富文本';
+COMMENT ON COLUMN users.avatar_url IS '用户头像URL地址，存储外部链接或相对路径';
+COMMENT ON COLUMN users.website_url IS '用户个人网站或博客地址';
+COMMENT ON COLUMN users.location IS '用户所在地理位置';
+
+-- 状态管理
+COMMENT ON COLUMN users.is_active IS '账户是否激活，false表示账户被停用';
+COMMENT ON COLUMN users.is_banned IS '账户是否被封禁，true表示用户因违规被封';
+COMMENT ON COLUMN users.role IS '用户角色：admin-管理员, editor-编辑, author-作者, user-普通用户, subscriber-订阅者';
+
+-- 时间戳
+COMMENT ON COLUMN users.created_at IS '账户创建时间，自动设置';
+COMMENT ON COLUMN users.updated_at IS '账户最后更新时间，通过触发器自动更新';
+COMMENT ON COLUMN users.last_login_at IS '用户最后登录时间';
+COMMENT ON COLUMN users.email_verified_at IS '邮箱验证通过的时间';
+
+-- ============================================
+-- 用户社交链接表列注释
+-- ============================================
+
+COMMENT ON COLUMN user_social_links.id IS '社交链接唯一标识符，自增主键';
+COMMENT ON COLUMN user_social_links.user_id IS '外键，关联到users表的用户ID';
+COMMENT ON COLUMN user_social_links.platform IS '社交平台名称，如github、twitter、weibo等';
+COMMENT ON COLUMN user_social_links.url IS '社交平台个人主页的完整URL';
+COMMENT ON COLUMN user_social_links.display_order IS '显示顺序，数值小的排在前面';
+COMMENT ON COLUMN user_social_links.created_at IS '记录创建时间';
+
+-- ============================================
+-- 用户设置表列注释
+-- ============================================
+
+COMMENT ON COLUMN user_settings.user_id IS '外键，关联到users表的用户ID，也是主键';
+COMMENT ON COLUMN user_settings.email_notifications IS '是否接收邮件通知，true为接收';
+COMMENT ON COLUMN user_settings.comment_notifications IS '是否接收评论通知，true为接收';
+COMMENT ON COLUMN user_settings.newsletter_subscribed IS '是否订阅新闻简报，true为订阅';
+COMMENT ON COLUMN user_settings.show_email_public IS '是否公开显示邮箱地址';
+COMMENT ON COLUMN user_settings.show_location_public IS '是否公开显示地理位置';
+COMMENT ON COLUMN user_settings.posts_per_page IS '每页显示的文章数量，用于分页设置';
+COMMENT ON COLUMN user_settings.preferred_theme IS '偏好主题：light-浅色, dark-深色, auto-自动';
+COMMENT ON COLUMN user_settings.timezone IS '用户设置的时区，影响时间显示';
+COMMENT ON COLUMN user_settings.updated_at IS '设置最后更新时间，通过触发器自动更新';
+
+-- ============================================
+-- 用户安全令牌表列注释
+-- ============================================
+
+COMMENT ON COLUMN user_security_tokens.id IS '令牌唯一标识符，自增主键';
+COMMENT ON COLUMN user_security_tokens.user_id IS '外键，关联到users表的用户ID';
+COMMENT ON COLUMN user_security_tokens.token_type IS '令牌类型：password_reset-密码重置, email_verify-邮箱验证, remember_me-记住登录';
+COMMENT ON COLUMN user_security_tokens.token_hash IS '令牌的哈希值，存储加密后的令牌';
+COMMENT ON COLUMN user_security_tokens.expires_at IS '令牌过期时间，过期后无效';
+COMMENT ON COLUMN user_security_tokens.used IS '令牌是否已使用，使用后不能重复使用';
+COMMENT ON COLUMN user_security_tokens.created_at IS '令牌创建时间';
+
+-- ============================================
+-- 用户统计表列注释
+-- ============================================
+
+COMMENT ON COLUMN user_statistics.user_id IS '外键，关联到users表的用户ID，也是主键';
+COMMENT ON COLUMN user_statistics.posts_count IS '用户发布的文章总数';
+COMMENT ON COLUMN user_statistics.comments_count IS '用户发表的评论总数';
+COMMENT ON COLUMN user_statistics.likes_count IS '用户收到的点赞总数';
+COMMENT ON COLUMN user_statistics.followers_count IS '用户的粉丝总数（关注者数量）';
+COMMENT ON COLUMN user_statistics.following_count IS '用户关注的其他用户总数';
+COMMENT ON COLUMN user_statistics.last_post_at IS '用户最后发布文章的时间';
+COMMENT ON COLUMN user_statistics.last_comment_at IS '用户最后发表评论的时间';
+COMMENT ON COLUMN user_statistics.last_login_at IS '用户最后登录时间（与users表同步）';
+COMMENT ON COLUMN user_statistics.updated_at IS '统计数据最后更新时间，通过触发器自动更新';
+
+-- ============================================
+-- 用户关注关系表列注释
+-- ============================================
+
+COMMENT ON COLUMN user_follows.follower_id IS '关注者用户ID，外键关联users表';
+COMMENT ON COLUMN user_follows.following_id IS '被关注者用户ID，外键关联users表';
+COMMENT ON COLUMN user_follows.created_at IS '关注关系建立时间';
+
+-- ============================================
+-- 索引注释
+-- ============================================
+
+COMMENT ON INDEX idx_users_username IS '用户名字段索引，加速用户名查询';
+COMMENT ON INDEX idx_users_email IS '邮箱字段索引，加速邮箱查询';
+COMMENT ON INDEX idx_users_role IS '角色字段索引，加速按角色筛选';
+COMMENT ON INDEX idx_users_created_at IS '创建时间索引，加速按时间范围查询';
+
+COMMENT ON INDEX idx_social_links_user IS '用户社交链接的用户ID索引，加速按用户查询';
+
+COMMENT ON INDEX idx_security_tokens_user IS '安全令牌的用户ID索引，加速按用户查询';
+COMMENT ON INDEX idx_security_tokens_expires IS '令牌过期时间索引，加速清理过期令牌';
+COMMENT ON INDEX idx_security_tokens_type IS '令牌类型索引，加速按类型查询';
+
+COMMENT ON INDEX idx_follows_follower IS '关注者ID索引，加速查询用户的关注列表';
+COMMENT ON INDEX idx_follows_following IS '被关注者ID索引，加速查询用户的粉丝列表';
+
+-- ============================================
+-- 触发器注释
+-- ============================================
+
+COMMENT ON TRIGGER update_users_updated_at ON users IS '在更新users表记录时自动更新updated_at字段';
+COMMENT ON TRIGGER update_user_settings_updated_at ON user_settings IS '在更新user_settings表记录时自动更新updated_at字段';
+COMMENT ON TRIGGER update_user_statistics_updated_at ON user_statistics IS '在更新user_statistics表记录时自动更新updated_at字段';
+
+-- ============================================
+-- 约束注释
+-- ============================================
+
+COMMENT ON CONSTRAINT valid_email ON users IS '邮箱格式验证约束，确保邮箱格式正确';
+COMMENT ON CONSTRAINT valid_username ON users IS '用户名格式验证约束，只允许字母、数字和下划线';
+COMMENT ON CONSTRAINT user_follows_pkey ON user_follows IS '主键约束，确保关注关系唯一';
+COMMENT ON CONSTRAINT user_follows_check ON user_follows IS '检查约束，防止用户关注自己';
+
+-- ============================================
+-- 完成信息
+-- ============================================
+DO
+$$
+    BEGIN
+        RAISE NOTICE '============================================';
+        RAISE NOTICE '所有表和列注释已成功添加！';
+        RAISE NOTICE '现在可以使用以下命令查看表注释：';
+        RAISE NOTICE '-- 查看表注释：\dt+ users';
+        RAISE NOTICE '-- 查看列注释：\d+ users';
+        RAISE NOTICE '-- 查看所有表：\dt+';
+        RAISE NOTICE '============================================';
+    END
+$$;

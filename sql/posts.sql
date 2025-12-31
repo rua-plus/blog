@@ -643,15 +643,15 @@ ORDER BY p.id, p.is_pinned DESC, p.published_at DESC;
 -- 文章详情视图
 CREATE OR REPLACE VIEW v_post_details AS
 SELECT p.*,
-       u.username                                                                                            as author_username,
-       u.display_name                                                                                        as author_name,
-       u.avatar_url                                                                                          as author_avatar,
-       u.bio                                                                                                 as author_bio,
-       u.website_url                                                                                         as author_website,
-       c.name                                                                                                as category_name,
-       c.slug                                                                                                as category_slug,
-       c.description                                                                                         as category_description,
-       c.sort_order                                                                                          as category_sort_order,
+       u.username                                                       as author_username,
+       u.display_name                                                   as author_name,
+       u.avatar_url                                                     as author_avatar,
+       u.bio                                                            as author_bio,
+       u.website_url                                                    as author_website,
+       c.name                                                           as category_name,
+       c.slug                                                           as category_slug,
+       c.description                                                    as category_description,
+       c.sort_order                                                     as category_sort_order,
        (SELECT json_agg(json_build_object(
                'id', t.id,
                'name', t.name,
@@ -659,7 +659,7 @@ SELECT p.*,
                         ))
         FROM post_tags pt
                  JOIN tags t ON pt.tag_id = t.id
-        WHERE pt.post_id = p.id)                                                                             as tags,
+        WHERE pt.post_id = p.id)                                        as tags,
        (SELECT json_agg(json_build_object(
                'id', s.id,
                'name', s.name,
@@ -668,12 +668,12 @@ SELECT p.*,
                         ))
         FROM post_series ps
                  JOIN series s ON ps.series_id = s.id
-        WHERE ps.post_id = p.id)                                                                             as series_info,
-       (SELECT COUNT(*) FROM post_revisions pr WHERE pr.post_id = p.id)                                      as revision_count,
+        WHERE ps.post_id = p.id)                                        as series_info,
+       (SELECT COUNT(*) FROM post_revisions pr WHERE pr.post_id = p.id) as revision_count,
        (SELECT meta_value
         FROM post_meta pm
         WHERE pm.post_id = p.id
-          AND pm.meta_key = 'estimated_read_time')                                                           as estimated_read_time
+          AND pm.meta_key = 'estimated_read_time')                      as estimated_read_time
 FROM posts p
          JOIN users u ON p.author_id = u.id
          LEFT JOIN categories c ON p.category_id = c.id;
@@ -811,6 +811,237 @@ $$
         RAISE NOTICE '下一步:';
         RAISE NOTICE '1. 插入初始分类数据';
         RAISE NOTICE '2. 测试文章发布功能';
+        RAISE NOTICE '============================================';
+    END
+$$;
+
+-- ============================================
+-- 为博客系统表结构添加注释
+-- = ============================================
+
+BEGIN;
+
+-- 表注释
+COMMENT ON TABLE posts IS '博客文章主表，存储所有文章的核心信息';
+COMMENT ON TABLE categories IS '文章分类表，支持多级分类结构';
+COMMENT ON TABLE tags IS '标签表，用于文章标签管理';
+COMMENT ON TABLE post_tags IS '文章与标签的多对多关联表';
+COMMENT ON TABLE post_revisions IS '文章版本历史表，记录文章修改历史';
+COMMENT ON TABLE post_meta IS '文章元数据表，用于存储文章的扩展字段';
+COMMENT ON TABLE series IS '文章系列表，用于将相关文章组织成系列';
+COMMENT ON TABLE post_series IS '文章与系列的关联表，包含在系列中的序号';
+COMMENT ON TABLE related_posts IS '相关文章关联表，用于建立文章之间的关联关系';
+
+-- 视图注释
+COMMENT ON VIEW v_published_posts IS '已发布文章的视图，包含作者、分类、标签等关联信息';
+COMMENT ON VIEW v_post_details IS '文章详情视图，包含完整的关联信息';
+COMMENT ON VIEW v_category_stats IS '分类统计视图，包含每个分类的文章数量、浏览量等统计信息';
+COMMENT ON VIEW v_author_stats IS '作者统计视图，显示每个作者的文章数量、浏览量等统计信息';
+COMMENT ON VIEW v_monthly_archive IS '月度归档视图，按月份统计文章数量';
+
+-- ============================================
+-- posts 表字段注释
+-- ============================================
+COMMENT ON COLUMN posts.id IS '文章主键ID，自增长';
+COMMENT ON COLUMN posts.title IS '文章标题，最大长度200字符';
+COMMENT ON COLUMN posts.slug IS '文章URL别名，唯一标识符，用于SEO友好的URL';
+COMMENT ON COLUMN posts.excerpt IS '文章摘要，用于列表页显示';
+COMMENT ON COLUMN posts.content IS '文章完整内容，支持富文本';
+COMMENT ON COLUMN posts.author_id IS '作者ID，关联users表';
+COMMENT ON COLUMN posts.editor_id IS '最后编辑者ID，关联users表';
+COMMENT ON COLUMN posts.category_id IS '分类ID，关联categories表';
+COMMENT ON COLUMN posts.status IS '文章状态：草稿(draft)、待审核(pending)、已发布(published)、私密(private)、回收站(trash)、定时发布(scheduled)';
+COMMENT ON COLUMN posts.is_featured IS '是否精选文章';
+COMMENT ON COLUMN posts.is_pinned IS '是否置顶文章';
+COMMENT ON COLUMN posts.allow_comments IS '是否允许评论';
+COMMENT ON COLUMN posts.comment_count IS '评论数量';
+COMMENT ON COLUMN posts.view_count IS '阅读次数';
+COMMENT ON COLUMN posts.like_count IS '点赞数量';
+COMMENT ON COLUMN posts.share_count IS '分享次数';
+COMMENT ON COLUMN posts.reading_time_minutes IS '预计阅读时间（分钟）';
+COMMENT ON COLUMN posts.meta_title IS 'SEO标题，如不设置则使用文章标题';
+COMMENT ON COLUMN posts.meta_description IS 'SEO描述';
+COMMENT ON COLUMN posts.meta_keywords IS 'SEO关键词';
+COMMENT ON COLUMN posts.canonical_url IS '规范URL，用于解决重复内容问题';
+COMMENT ON COLUMN posts.featured_image_url IS '特色图片URL';
+COMMENT ON COLUMN posts.featured_image_alt IS '特色图片ALT描述';
+COMMENT ON COLUMN posts.published_at IS '发布时间，仅当状态为published时有效';
+COMMENT ON COLUMN posts.scheduled_at IS '定时发布时间，仅当状态为scheduled时有效';
+COMMENT ON COLUMN posts.created_at IS '创建时间';
+COMMENT ON COLUMN posts.updated_at IS '最后更新时间';
+COMMENT ON COLUMN posts.deleted_at IS '软删除时间，不为NULL表示已删除';
+COMMENT ON COLUMN posts.version IS '文章版本号，每次更新递增';
+COMMENT ON COLUMN posts.parent_post_id IS '父文章ID，用于文章版本控制或翻译';
+COMMENT ON COLUMN posts.search_vector IS '全文搜索向量，用于全文检索优化';
+
+-- ============================================
+-- categories 表字段注释
+-- ============================================
+COMMENT ON COLUMN categories.id IS '分类主键ID';
+COMMENT ON COLUMN categories.name IS '分类名称';
+COMMENT ON COLUMN categories.slug IS '分类URL别名，唯一标识符';
+COMMENT ON COLUMN categories.description IS '分类描述';
+COMMENT ON COLUMN categories.parent_id IS '父分类ID，用于多级分类';
+COMMENT ON COLUMN categories.sort_order IS '排序序号，数字越小排序越靠前';
+COMMENT ON COLUMN categories.post_count IS '该分类下的文章数量';
+COMMENT ON COLUMN categories.is_active IS '是否启用该分类';
+COMMENT ON COLUMN categories.created_at IS '创建时间';
+COMMENT ON COLUMN categories.updated_at IS '最后更新时间';
+
+-- ============================================
+-- tags 表字段注释
+-- ============================================
+COMMENT ON COLUMN tags.id IS '标签主键ID';
+COMMENT ON COLUMN tags.name IS '标签名称';
+COMMENT ON COLUMN tags.slug IS '标签URL别名，唯一标识符';
+COMMENT ON COLUMN tags.description IS '标签描述';
+COMMENT ON COLUMN tags.post_count IS '使用该标签的文章数量';
+COMMENT ON COLUMN tags.is_active IS '是否启用该标签';
+COMMENT ON COLUMN tags.created_at IS '创建时间';
+COMMENT ON COLUMN tags.updated_at IS '最后更新时间';
+
+-- ============================================
+-- post_tags 表字段注释
+-- ============================================
+COMMENT ON COLUMN post_tags.post_id IS '文章ID';
+COMMENT ON COLUMN post_tags.tag_id IS '标签ID';
+COMMENT ON COLUMN post_tags.created_at IS '关联创建时间';
+
+-- ============================================
+-- post_revisions 表字段注释
+-- ============================================
+COMMENT ON COLUMN post_revisions.id IS '版本记录主键ID';
+COMMENT ON COLUMN post_revisions.post_id IS '文章ID';
+COMMENT ON COLUMN post_revisions.title IS '文章标题（历史版本）';
+COMMENT ON COLUMN post_revisions.content IS '文章内容（历史版本）';
+COMMENT ON COLUMN post_revisions.excerpt IS '文章摘要（历史版本）';
+COMMENT ON COLUMN post_revisions.author_id IS '版本创建者ID';
+COMMENT ON COLUMN post_revisions.reason IS '版本变更原因';
+COMMENT ON COLUMN post_revisions.revision_number IS '版本号，从1开始递增';
+COMMENT ON COLUMN post_revisions.is_autosave IS '是否为自动保存的版本';
+COMMENT ON COLUMN post_revisions.created_at IS '版本创建时间';
+
+-- ============================================
+-- post_meta 表字段注释
+-- ============================================
+COMMENT ON COLUMN post_meta.id IS '元数据主键ID';
+COMMENT ON COLUMN post_meta.post_id IS '文章ID';
+COMMENT ON COLUMN post_meta.meta_key IS '元数据键名，如"custom_field"';
+COMMENT ON COLUMN post_meta.meta_value IS '元数据值';
+COMMENT ON COLUMN post_meta.created_at IS '创建时间';
+COMMENT ON COLUMN post_meta.updated_at IS '最后更新时间';
+
+-- ============================================
+-- series 表字段注释
+-- ============================================
+COMMENT ON COLUMN series.id IS '系列主键ID';
+COMMENT ON COLUMN series.name IS '系列名称';
+COMMENT ON COLUMN series.slug IS '系列URL别名，唯一标识符';
+COMMENT ON COLUMN series.description IS '系列描述';
+COMMENT ON COLUMN series.author_id IS '系列创建者ID';
+COMMENT ON COLUMN series.post_count IS '系列中的文章数量';
+COMMENT ON COLUMN series.sort_order IS '排序序号';
+COMMENT ON COLUMN series.is_active IS '是否启用该系列';
+COMMENT ON COLUMN series.created_at IS '创建时间';
+COMMENT ON COLUMN series.updated_at IS '最后更新时间';
+
+-- ============================================
+-- post_series 表字段注释
+-- ============================================
+COMMENT ON COLUMN post_series.post_id IS '文章ID';
+COMMENT ON COLUMN post_series.series_id IS '系列ID';
+COMMENT ON COLUMN post_series.episode_number IS '在系列中的集数/序号';
+COMMENT ON COLUMN post_series.created_at IS '关联创建时间';
+
+-- ============================================
+-- related_posts 表字段注释
+-- ============================================
+COMMENT ON COLUMN related_posts.post_id IS '文章ID';
+COMMENT ON COLUMN related_posts.related_post_id IS '相关文章ID';
+COMMENT ON COLUMN related_posts.relevance_score IS '相关度分数，数值越高相关度越高';
+COMMENT ON COLUMN related_posts.is_manual IS '是否为手动关联（非自动推荐）';
+COMMENT ON COLUMN related_posts.created_at IS '关联创建时间';
+
+-- ============================================
+-- 函数注释
+-- ============================================
+COMMENT ON FUNCTION update_updated_at_column() IS '自动更新updated_at字段的触发器函数';
+COMMENT ON FUNCTION calculate_reading_time(content_text TEXT) IS '计算文章阅读时间（分钟）的函数';
+COMMENT ON FUNCTION generate_unique_slug(base_slug VARCHAR, table_name VARCHAR, id_column VARCHAR, id_value INTEGER) IS '生成唯一slug的函数，避免重复';
+COMMENT ON FUNCTION update_post_stats(p_post_id INTEGER, p_view_change INTEGER, p_like_change INTEGER, p_comment_change INTEGER, p_share_change INTEGER) IS '更新文章统计数据的函数（浏览量、点赞数等）';
+COMMENT ON FUNCTION publish_post(p_post_id INTEGER, p_publish_time TIMESTAMP WITH TIME ZONE) IS '发布文章的函数，更新文章状态和相关统计';
+COMMENT ON FUNCTION get_related_posts(p_post_id INTEGER, p_limit INTEGER) IS '获取相关文章的函数，返回指定文章的相关文章列表';
+COMMENT ON FUNCTION search_posts(p_search_query TEXT, p_category_id INTEGER, p_author_id INTEGER, p_tag_ids INTEGER[], p_status_filter VARCHAR, p_limit_count INTEGER, p_offset_count INTEGER) IS '搜索文章的函数，支持全文搜索和多种过滤条件';
+COMMENT ON FUNCTION update_post_reading_time() IS '自动更新文章阅读时间的触发器函数';
+COMMENT ON FUNCTION handle_post_status_change() IS '处理文章状态变更的触发器函数';
+COMMENT ON FUNCTION posts_search_vector_update() IS '更新文章全文搜索向量的触发器函数';
+
+-- ============================================
+-- 索引注释
+-- ============================================
+COMMENT ON INDEX idx_posts_author_id IS '按作者ID查询文章的索引';
+COMMENT ON INDEX idx_posts_status IS '按文章状态查询的索引';
+COMMENT ON INDEX idx_posts_category_id IS '按分类ID查询文章的索引';
+COMMENT ON INDEX idx_posts_published_at IS '按发布时间查询文章的索引';
+COMMENT ON INDEX idx_posts_created_at IS '按创建时间查询文章的索引';
+COMMENT ON INDEX idx_posts_slug IS '按slug查询文章的索引（唯一）';
+COMMENT ON INDEX idx_posts_featured IS '查询精选文章的索引';
+COMMENT ON INDEX idx_posts_pinned IS '查询置顶文章的索引';
+COMMENT ON INDEX idx_posts_status_published IS '按状态和发布时间组合查询的索引';
+COMMENT ON INDEX idx_posts_author_status IS '按作者和状态组合查询的索引';
+COMMENT ON INDEX idx_posts_category_status IS '按分类和状态组合查询的索引';
+COMMENT ON INDEX idx_categories_parent_id IS '按父分类ID查询的索引';
+COMMENT ON INDEX idx_categories_slug IS '按分类slug查询的索引';
+COMMENT ON INDEX idx_categories_active IS '查询启用分类的索引';
+COMMENT ON INDEX idx_tags_slug IS '按标签slug查询的索引';
+COMMENT ON INDEX idx_tags_active IS '查询启用标签的索引';
+COMMENT ON INDEX idx_post_tags_tag_id IS '按标签ID查询文章关联的索引';
+COMMENT ON INDEX idx_post_tags_post_id IS '按文章ID查询标签关联的索引';
+COMMENT ON INDEX idx_post_revisions_post_id IS '按文章ID查询版本历史的索引';
+COMMENT ON INDEX idx_post_revisions_created_at IS '按创建时间查询版本历史的索引';
+COMMENT ON INDEX idx_post_revisions_author_id IS '按作者ID查询版本历史的索引';
+COMMENT ON INDEX idx_post_meta_post_id IS '按文章ID查询元数据的索引';
+COMMENT ON INDEX idx_post_meta_key IS '按元数据键名查询的索引';
+COMMENT ON INDEX idx_series_author_id IS '按作者ID查询系列的索引';
+COMMENT ON INDEX idx_series_slug IS '按系列slug查询的索引';
+COMMENT ON INDEX idx_related_posts_related_id IS '按相关文章ID查询的索引';
+COMMENT ON INDEX idx_posts_search_vector IS '文章全文搜索索引（GIN类型）';
+
+-- ============================================
+-- 约束注释
+-- ============================================
+COMMENT ON CONSTRAINT posts_slug_format ON posts IS '检查slug格式：只允许小写字母、数字和连字符，不能以连字符开头或结尾';
+COMMENT ON CONSTRAINT posts_scheduled_check ON posts IS '检查定时发布文章的条件：scheduled状态必须有scheduled_at时间，且必须晚于创建时间';
+COMMENT ON CONSTRAINT posts_published_check ON posts IS '检查已发布文章的条件：published状态必须有published_at时间';
+COMMENT ON CONSTRAINT categories_slug_format ON categories IS '检查分类slug格式：只允许小写字母、数字和连字符，不能以连字符开头或结尾';
+COMMENT ON CONSTRAINT tags_slug_format ON tags IS '检查标签slug格式：只允许小写字母、数字和连字符，不能以连字符开头或结尾';
+COMMENT ON CONSTRAINT series_slug_format ON series IS '检查系列slug格式：只允许小写字母、数字和连字符，不能以连字符开头或结尾';
+COMMENT ON CONSTRAINT post_tags_pkey ON post_tags IS '文章-标签关联表的主键约束（post_id, tag_id组合唯一）';
+COMMENT ON CONSTRAINT post_series_pkey ON post_series IS '文章-系列关联表的主键约束（post_id, series_id组合唯一）';
+COMMENT ON CONSTRAINT post_series_series_id_episode_number_key ON post_series IS '文章在系列中的序号唯一约束，确保同一个系列中没有重复的序号';
+COMMENT ON CONSTRAINT related_posts_pkey ON related_posts IS '相关文章表的主键约束（post_id, related_post_id组合唯一）';
+COMMENT ON CONSTRAINT related_posts_check ON related_posts IS '检查相关文章不能是同一篇文章';
+
+-- ============================================
+-- 提交所有更改
+-- ============================================
+COMMIT;
+
+-- ============================================
+-- 完成信息
+-- ============================================
+DO
+$$
+    BEGIN
+        RAISE NOTICE '============================================';
+        RAISE NOTICE '表结构注释添加完成！';
+        RAISE NOTICE '已为9个表、8个视图、所有字段、函数、索引和约束添加了详细注释';
+        RAISE NOTICE '';
+        RAISE NOTICE '注释优势：';
+        RAISE NOTICE '1. 提高代码可读性和维护性';
+        RAISE NOTICE '2. 便于新开发者理解数据库结构';
+        RAISE NOTICE '3. 自动生成文档的基础';
+        RAISE NOTICE '4. 辅助数据库设计评审';
         RAISE NOTICE '============================================';
     END
 $$;
