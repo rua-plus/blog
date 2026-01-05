@@ -11,3 +11,4 @@ Postgresql 18
 | 3   | posts      | 文章表     |
 | 4   | tags       | 文章标签表 |
 | 5   | users      | 用户表     |
+| 6   | media      | 媒体文件表 |

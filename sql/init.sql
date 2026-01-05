@@ -172,3 +172,28 @@ CREATE TABLE tags
 COMMENT ON TABLE tags IS '文章标签表';
 COMMENT ON COLUMN tags.name IS '标签名称';
 COMMENT ON COLUMN tags.slug IS 'URL友好标识';
+
+-- 创建媒体表
+CREATE TABLE media
+(
+    id          SERIAL PRIMARY KEY,
+    filename    VARCHAR(255) NOT NULL, -- 原始文件名
+    file_path   VARCHAR(500) NOT NULL, -- 存储路径
+    file_type   VARCHAR(100),          -- 文件类型
+    file_size   INTEGER,               -- 文件大小（字节）
+    uploader_id INTEGER,               -- 上传者
+    alt_text    TEXT,                  -- 替代文本
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_media_uploader
+        FOREIGN KEY (uploader_id)
+            REFERENCES users (id)
+            ON DELETE SET NULL
+);
+COMMENT ON TABLE media IS '媒体文件表';
+COMMENT ON COLUMN media.filename IS '原始文件名';
+COMMENT ON COLUMN media.file_path IS '文件存储路径（相对路径）';
+COMMENT ON COLUMN media.file_type IS '文件MIME类型';
+COMMENT ON COLUMN media.file_size IS '文件大小（字节）';
+COMMENT ON COLUMN media.uploader_id IS '上传用户ID';
+COMMENT ON COLUMN media.alt_text IS '替代文本，用于无障碍访问和SEO';
