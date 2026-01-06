@@ -44,8 +44,7 @@ Postgresql 18
   "code": 200,
   "message": "success",
   "data": {},
-  "timestamp": 1640995200000,
-  "requestId": "req_1234567890abcdef"
+  "timestamp": 1640995200000
 }
 ```
 
@@ -64,7 +63,6 @@ Postgresql 18
     }
   },
   "timestamp": 1640995200000,
-  "requestId": "req_1234567890abcdef",
   "version": "v1.0.0"
 }
 ```
@@ -87,7 +85,6 @@ Postgresql 18
     }
   ],
   "timestamp": 1640995200000,
-  "requestId": "req_1234567890abcdef",
   "path": "/api/v1/users",
   "debug": "详细错误堆栈（仅开发环境）"
 }
@@ -111,8 +108,7 @@ Postgresql 18
       "totalPages": 8
     }
   },
-  "timestamp": 1640995200000,
-  "requestId": "req_1234567890abcdef"
+  "timestamp": 1640995200000
 }
 ```
 
