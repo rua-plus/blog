@@ -35,6 +35,17 @@ Postgresql 18
 
 ### 接口
 
+- 路由
+
+- `/api`
+  - `/user/login`
+  - `/user/create`
+  - `/user/create`
+  - `/user/list`
+  - `/post/create`
+  - `/post/list`
+  - `/post/:postID`
+
 - 统一的返回格式
 
 基础响应格式：
